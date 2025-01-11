@@ -1,7 +1,10 @@
-import { serverSupabaseClient } from '#supabase/server'
+import { supabase } from "~/utils/supabase";
 
 export default defineEventHandler(async (event) => {
-  const client = await serverSupabaseClient(event);
-  const { data } = await client.from("project").select("*");
+  const { data, error } = await supabase
+    .from("project")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
   return data;
 });

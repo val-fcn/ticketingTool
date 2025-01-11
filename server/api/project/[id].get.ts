@@ -1,12 +1,13 @@
-import { serverSupabaseClient } from '#supabase/server'
+import { supabase } from "~/utils/supabase";
+
 
 export default defineEventHandler(async (event) => {
-  const client = await serverSupabaseClient(event)
-  const { data } = await client
+  const { data, error } = await supabase
     .from('project')
     .select('*')
     .eq('id', event.context.params?.id || {})
     .single()
   
+  if (error) throw error;
   return data
 })
