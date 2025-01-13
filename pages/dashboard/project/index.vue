@@ -1,26 +1,47 @@
-<template #main-content>
+<template>
   <NuxtLayout>
-    <UContainer class="flex flex-row p-4 gap-4">
-      <UButton>Create Project</UButton>
-    </UContainer>
-    <UDivider />
-    <UContainer class="flex flex-row p-4 gap-4">
-      <UTable
-        class="w-full border border-gray-200 rounded-md"
-        :rows="projects || []"
-        :columns="columns"
-        :empty-state="{
-          icon: 'i-heroicons-folder-open',
-          label: 'No items.',
-        }"
-        @select="handleSelect"
-        :ui="{
-          td: {
-            base: 'cursor-pointer',
-          },
-        }"
-      />
-    </UContainer>
+    <div class="flex flex-col p-4 gap-4">
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold">Projets</h1>
+        <UButton
+          icon="i-heroicons-plus"
+          label="Nouveau projet"
+          @click="onModalOpen"
+        />
+      </div>
+      <UDivider />
+      <div class="flex flex-col border rounded-md">
+        <UTable
+          :rows="projects || []"
+          :columns="columns"
+          :loading="pending"
+          :empty-state="{ icon: 'i-heroicons-folder', label: 'Aucun projet' }"
+          @select="onSelect"
+          :ui="{
+            td: { base: 'cursor-pointer' },
+          }"
+        >
+          <template #actions-data="{ row }">
+            <UButton
+              icon="i-heroicons-arrow-right"
+              variant="ghost"
+              :to="`/dashboard/project/${row.id}`"
+            />
+          </template>
+        </UTable>
+      </div>
+    </div>
+
+    <UModal v-model="isModalOpen">
+      <UCard>
+        <UForm :state="form" @submit="onSubmit">
+          <UFormGroup label="Titre du projet" name="project_title">
+            <UInput v-model="form.project_title" />
+          </UFormGroup>
+          <UButton type="submit">Créer</UButton>
+        </UForm>
+      </UCard>
+    </UModal>
   </NuxtLayout>
 </template>
 
@@ -30,29 +51,42 @@ definePageMeta({
   key: (route) => route.fullPath,
 });
 
-// TYPES
-interface Project {
+const isModalOpen = ref(false);
+const form = ref({
+  project_title: "",
+});
+const router = useRouter();
+type Project = {
   id: string;
   name: string;
-}
-const router = useRouter();
+};
 
-// FETCH
-const { data: projects, status } = await useFetch("/api/project/projectList");
-
-// FUNCTIONS
-const handleSelect = (row: Project) => {
+const onSelect = (row: Project) => {
   router.push(`/dashboard/project/${row.id}`);
 };
+const onModalOpen = () => {
+  isModalOpen.value = true;
+};
+
+const onSubmit = () => {
+  console.log(form.value);
+};
+
+const { data: projects, status } = await useAsyncData("projects-list", () =>
+  $fetch("/api/project/projectList")
+);
+
+const pending = computed(() => status.value === "pending");
 
 const columns = [
   {
     key: "name",
-    label: "Projet",
+    label: "Nom",
+    sortable: true,
   },
   {
-    key: "created_at",
-    label: "Créé le",
+    key: "actions",
+    label: "",
   },
 ];
 </script>

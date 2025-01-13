@@ -5,6 +5,7 @@
 .nitro
 .cache
 .env
+.cursorrules
 dist
 
 # Node dependencies
