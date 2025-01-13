@@ -1,27 +1,21 @@
-<template>
+<template #main-content>
   <NuxtLayout>
-    <template #main-content>
-      <UContainer class="flex flex-col px-6 py-4">
-        <div class="flex items-center justify-between mb-6">
-          <h1 class="text-2xl font-bold">{{ project?.name }}</h1>
-          <UButton
-            icon="i-heroicons-plus"
-            label="Nouveau ticket"
-            @click="isCreateTicketOpen = true"
-          />
-        </div>
-        <div v-if="status === 'pending'">
-          <USkeleton class="w-full" />
-        </div>
-        <UCard v-else>
-          <UTable
-            :TableRows="tickets || []"
-            :columns="columns"
-            :status="status"
-          />
-        </UCard>
-      </UContainer>
-    </template>
+    <UContainer class="flex flex-col px-6 py-4">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold">{{ project?.name }}</h1>
+        <UButton icon="i-heroicons-plus" label="Nouveau ticket" />
+      </div>
+      <div v-if="ticketsStatus === 'loading'">
+        <USkeleton class="w-full" />
+      </div>
+      <div v-else>
+        <UTable
+          class="w-full border border-gray-200 rounded-md"
+          :rows="tickets || []"
+          :columns="columns"
+        />
+      </div>
+    </UContainer>
   </NuxtLayout>
 </template>
 
@@ -31,34 +25,39 @@ definePageMeta({
   key: (route) => route.fullPath,
 });
 
-const route = useRoute();
-const isCreateTicketOpen = ref(false);
-
+// TYPES
 interface Project {
   id: string;
   name: string;
 }
 
-const { data: project, status } = await useFetch<Project>(
-  `/api/project/${route.params.id}`,
-  {
-    watch: [toRef(route.params, "id")],
-    key: `project-${route.params.id}`,
-    cache: "force-cache",
-  }
+interface Ticket {
+  id: string;
+  title: string;
+  status: string;
+  priority: string;
+}
+
+// VARIABLES
+const route = useRoute();
+let project = ref<Project>();
+let tickets = ref<Ticket[]>([]);
+let ticketsStatus = ref<string>("");
+
+//FETCH
+const { data: projectData } = await useFetch<Project>(
+  `/api/project/${route.params.id}`
+);
+if (projectData.value) {
+  project.value = projectData.value;
+}
+
+const { data: ticketsData, status } = await useFetch<Ticket[]>(
+  `/api/ticket/${project.value?.id}`
 );
 
-const { data: tickets, status: ticketsStatus } = await useFetch(
-  `/api/ticket/ticketList`,
-  {
-    params: {
-      id: project?.value?.id,
-    },
-    watch: [toRef(route.params, "id")],
-    key: `ticket-${route.params.id}`,
-    cache: "force-cache",
-  }
-);
+tickets.value = ticketsData.value || [];
+ticketsStatus.value = status.value;
 
 const columns = [
   {

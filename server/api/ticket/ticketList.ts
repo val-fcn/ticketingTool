@@ -7,6 +7,7 @@ export default defineEventHandler(async (event: any) => {
     .eq("id", event.context.params.id);
   if (error) throw error;
   return data;
+  console.log(data)
 });
   
 

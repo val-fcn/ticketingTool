@@ -3,8 +3,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
   
   if (user.value) {
     // Utilisateur connecté : rediriger vers dashboard si sur la page login ou index
-    if (to.path === '/login' || to.path === '/') {
-      return navigateTo('/dashboard')
+    if (to.path === "/login" || to.path === "/") {
+      return navigateTo("/dashboard/project");
     }
   } else {
     // Utilisateur non connecté : rediriger vers login si tentative d'accès au dashboard
@@ -12,4 +12,5 @@ export default defineNuxtRouteMiddleware(async (to) => {
       return navigateTo('/login')
     }
   }
-}) 
+});
+  
